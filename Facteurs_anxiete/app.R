@@ -2,6 +2,10 @@ library(shiny)
 library(readr)
 library(tidyverse)
 library(shinydashboard)
+library(ggplot2)
+library(corrplot)
+library(dplyr)
+library(tidyr)
 library(skimr)
 library(DT)
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
@@ -12,6 +16,27 @@ donnees <- donnees |>
       as.factor
     )
   )
+names(donnees) <- c(
+  "Âge",
+  "Sexe",
+  "Profession",
+  "Heures de sommeil",
+  "Activité physique",
+  "Caféine consommée",
+  "Consommation d'alcool",
+  "Tabagisme",
+  "Antécédents familiaux d'anxiété",
+  "Niveau de stress",
+  "Fréquence cardiaque",
+  "Fréquence respiratoire",
+  "Niveau de transpiration",
+  "Vertiges",
+  "Médication",
+  "Séances de thérapie",
+  "Événement de vie récent",
+  "Qualité de l'alimentation",
+  "Niveau d'anxiété"
+)
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
 source("R/page_donnees.R")
