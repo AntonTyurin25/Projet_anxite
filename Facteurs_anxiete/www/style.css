@@ -1,0 +1,56 @@
+/* Logo */
+.main-header .logo {
+  background-color: #ffffff !important;
+}
+
+/* Barre supérieure */
+.main-header .navbar {
+  background-color: #ffffff !important;
+}
+
+/* Menu latéral */
+.main-sidebar {
+  background-color: #222d32;
+}
+
+/* Texte du menu */
+.sidebar-menu > li > a {
+  font-size: 15px;
+}
+
+/* Nom des créateurs */
+.creator-name {
+  padding: 15px;
+  display: block;
+  color: #ffffff;
+}
+
+/* Bouton hamburger */
+.main-header .sidebar-toggle {
+  color: #333333 !important;
+  background-color: transparent !important;
+}
+
+/* Au survol */
+.main-header .sidebar-toggle:hover {
+  color: #000000 !important;
+  background-color: #eeeeee !important;
+}
+
+/* Icône créateurs */
+.main-header .dropdown-toggle .fa-users {
+    color: #333333 !important;
+    font-size: 18px;
+}
+
+/* Bouton créateurs */
+.main-header .dropdown-toggle {
+    color: #333333 !important;
+    background-color: transparent !important;
+}
+
+/* Au survol */
+.main-header .dropdown-toggle:hover {
+    color: #000000 !important;
+    background-color: #eeeeee !important;
+}
