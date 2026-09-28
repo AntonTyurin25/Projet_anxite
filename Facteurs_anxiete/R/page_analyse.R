@@ -1,286 +1,276 @@
 
+# ============================================================
+# UI
+# ============================================================
+
 page_analyse_ui <- function(id) {
-
+  
   ns <- NS(id)
-
-  tagList(
-
-    # -----------------------------------------------------
-    # Sous-pages
-    # -----------------------------------------------------
-    tabsetPanel(
-
-      id = ns("sous_page"),
-
-      # ===================================================
-      # PAGE 1 : CORRELATIONS
-      # ===================================================
-
-      tabPanel(
-
-        title = "Corrélations avec Niveau d'anxiété",
-
-        br(),
-
-        h3("Corrélations entre variables numériques"),
-
-        p(
-          "Cette section présente les relations entre les variables numériques ",
-          "ainsi que leur corrélation avec la variable cible ",
-          strong("Niveau d'anxiété"),
-          "."
+  
+  tabsetPanel(
+    
+    id = ns("sous_page"),
+    
+    # --------------------------------------------------------
+    # Corrélations
+    # --------------------------------------------------------
+    
+    tabPanel(
+      title = "Corrélations avec le niveau d'anxiété",
+      
+      br(),
+      
+      h3("Analyse des corrélations"),
+      
+      p(
+        "Cette analyse présente les corrélations entre les variables ",
+        "numériques ainsi que leur relation avec le niveau d'anxiété."
+      ),
+      
+      br(),
+      
+      fluidRow(
+        
+        # ====================================================
+        # CORRPLOT
+        # ====================================================
+        
+        box(
+          title = "Corrélations entre variables numériques",
+          width = 6,
+          status = "primary",
+          solidHeader = TRUE,
+          
+          plotOutput(
+            ns("corrplot_general"),
+            height = "550px"
+          )
         ),
-
-        # -----------------------------------------------
-        # Choix du nombre de variables
-        # -----------------------------------------------
-
-        sliderInput(
-          ns("n_variables"),
-          "Nombre de variables affichées dans le corrplot :",
-          min = 5,
-          max = 30,
-          value = 15,
-          step = 1
-        ),
-
-        fluidRow(
-
-          # ---------------------------------------------
-          # CORRPLOT
-          # ---------------------------------------------
-
-          box(
-            title = "Matrice de corrélation",
-            width = 7,
-            status = "primary",
-            solidHeader = TRUE,
-
-            plotOutput(
-              ns("corrplot"),
-              height = "650px"
-            )
-          ),
-
-          # ---------------------------------------------
-          # CORRELATION AVEC LA CIBLE
-          # ---------------------------------------------
-
-          box(
-            title = "Corrélations avec Niveau d'anxiété",
-            width = 5,
-            status = "primary",
-            solidHeader = TRUE,
-
-            plotOutput(
-              ns("corr_cible"),
-              height = "650px"
-            )
+        
+        # ====================================================
+        # CORRELATIONS AVEC ANXIETE
+        # ====================================================
+        
+        box(
+          title = "Corrélations avec le niveau d'anxiété",
+          width = 6,
+          status = "primary",
+          solidHeader = TRUE,
+          
+          plotOutput(
+            ns("corr_anxiete"),
+            height = "550px"
           )
         )
-      ),
-
-
-      # ===================================================
-      # PAGE 2 : ANALYSES 2 À 2
-      # ===================================================
-
-      tabPanel(
-
-        title = "Analyses 2 à 2",
-
-        br(),
-
-        h3("Analyses bivariées"),
-
-        p(
-          "Sélectionnez deux variables afin d'étudier leur relation."
-        )
-
-        # On ajoutera cette partie ensuite
+      )
+    ),
+    
+    
+    # --------------------------------------------------------
+    # Analyses 2 à 2
+    # --------------------------------------------------------
+    
+    tabPanel(
+      title = "Analyses 2 à 2",
+      
+      br(),
+      
+      h3("Analyses bivariées"),
+      
+      p(
+        "Sélectionnez deux variables afin d'étudier leur relation."
       )
     )
   )
 }
 
 
-# =========================================================
+# ============================================================
 # SERVER
-# =========================================================
+# ============================================================
 
 page_analyse_server <- function(id, donnees) {
-
+  
   moduleServer(id, function(input, output, session) {
-
-
-    # =====================================================
-    # VARIABLES NUMERIQUES
-    # =====================================================
-
-    variables_numeriques <- names(
-      donnees[
+    
+    
+    # ========================================================
+    # 1. CORRPLOT GENERAL
+    # ========================================================
+    
+    output$corrplot_general <- renderPlot({
+      
+      # Variables numériques
+      donnees_num <- donnees[
         sapply(donnees, is.numeric)
       ]
-    )
-
-
-    # Vérification de la présence de la cible
-    validate(
-      need(
-        "Niveau d'anxiété" %in% names(donnees),
-        "La variable 'Niveau d'anxiété' est absente des données."
+      
+      # Retirer la variable cible
+      if ("Niveau d'anxiété" %in% names(donnees_num)) {
+        donnees_num[["Niveau d'anxiété"]] <- NULL
+      }
+      
+      validate(
+        need(
+          ncol(donnees_num) >= 2,
+          "Il faut au moins deux variables numériques."
+        )
       )
-    )
-
-
-    # Variables numériques hors cible
-    variables_predictives <- setdiff(
-      variables_numeriques,
-      "Niveau d'anxiété"
-    )
-
-
-    # =====================================================
-    # CORRPLOT
-    # =====================================================
-
-    output$corrplot <- renderPlot({
-
-      req(length(variables_predictives) >= 2)
-
-
-      # ---------------------------------------------------
-      # Calcul de la matrice de corrélation
-      # ---------------------------------------------------
-
-      cor_mat <- cor(
-        donnees[, variables_predictives, drop = FALSE],
+      
+      
+      # Matrice de corrélation
+      matrice_cor <- cor(
+        donnees_num,
         use = "pairwise.complete.obs",
         method = "pearson"
       )
-
-
-      # ---------------------------------------------------
-      # Sélection des variables les plus corrélées
-      # à Niveau d'anxiété
-      # ---------------------------------------------------
-
-      cor_cible <- cor(
-        donnees[, variables_predictives, drop = FALSE],
-        donnees[["Niveau d'anxiété"]],
-        use = "pairwise.complete.obs",
-        method = "pearson"
+      
+      
+      # Transformer la matrice en format long
+      df_cor <- as.data.frame(as.table(matrice_cor))
+      
+      names(df_cor) <- c(
+        "variable_x",
+        "variable_y",
+        "correlation"
       )
-
-      cor_cible <- sort(
-        abs(cor_cible),
-        decreasing = TRUE
-      )
-
-
-      n <- min(
-        input$n_variables,
-        length(cor_cible)
-      )
-
-      variables_selectionnees <- names(
-        cor_cible[1:n]
-      )
-
-
-      # Matrice réduite
-      cor_mat_reduit <- cor_mat[
-        variables_selectionnees,
-        variables_selectionnees,
-        drop = FALSE
-      ]
-
-
-      # ---------------------------------------------------
-      # CORRPLOT
-      # ---------------------------------------------------
-
-      corrplot(
-        cor_mat_reduit,
-        method = "color",
-        type = "upper",
-
-        # Affichage des coefficients
-        addCoef.col = "black",
-        number.cex = 0.65,
-
-        # Noms
-        tl.col = "black",
-        tl.cex = 0.75,
-        tl.srt = 45,
-
-        # Couleurs
-        col = colorRampPalette(
-          c(
-            "#2166AC",
-            "#67A9CF",
-            "#F7F7F7",
-            "#EF8A62",
-            "#B2182B"
+      
+      
+      # Garder uniquement la moitié supérieure
+      df_cor <- df_cor |>
+        filter(
+          as.numeric(variable_x) < as.numeric(variable_y)
+        ) |>
+        mutate(
+          variable_y = forcats::fct_rev(variable_y)
+        )
+      
+      
+      # ----------------------------------------------------------
+      # Graphique
+      # ----------------------------------------------------------
+      
+      ggplot(
+        df_cor,
+        aes(
+          x = variable_x,
+          y = variable_y,
+          fill = correlation
+        )
+      ) +
+        
+        geom_tile(
+          color = "white",
+          linewidth = 0.3
+        ) +
+        
+        scale_fill_gradient2(
+          low = "#2166AC",
+          mid = "white",
+          high = "#B2182B",
+          midpoint = 0,
+          limits = c(-1, 1),
+          name = "Corrélation"
+        ) +
+        
+        coord_fixed() +
+        labs(
+          x = NULL,
+          y = NULL
+        ) +
+        
+        theme_minimal(
+          base_size = 12
+        ) +
+        
+        theme(
+          axis.text.x = element_text(
+            angle = 45,
+            hjust = 1,
+            vjust = 1
+          ),
+          
+          axis.text.y = element_text(
+            size = 10
+          ),
+          
+          panel.grid = element_blank(),
+          
+          plot.margin = margin(
+            10, 10, 10, 10
           )
-        )(200),
-
-        # Échelle
-        cl.cex = 0.8,
-
-        # Ne pas afficher la diagonale
-        diag = FALSE
-      )
-
+        )
     })
-
-
-    # =====================================================
-    # CORRELATIONS AVEC Niveau d'anxiété
-    # =====================================================
-
-    output$corr_cible <- renderPlot({
-
-      req(length(variables_predictives) >= 1)
-
-
-      # ---------------------------------------------------
+    
+    
+    # ========================================================
+    # 2. CORRELATIONS AVEC LE NIVEAU D'ANXIETE
+    # ========================================================
+    
+    output$corr_anxiete <- renderPlot({
+      
+      # Vérifier que la variable existe
+      validate(
+        need(
+          "Niveau d'anxiété" %in% names(donnees),
+          "La variable 'Niveau d'anxiété' est absente."
+        )
+      )
+      
+      # Vérifier que la variable est numérique
+      validate(
+        need(
+          is.numeric(donnees[["Niveau d'anxiété"]]),
+          "La variable 'Niveau d'anxiété' doit être numérique."
+        )
+      )
+      
+      
+      # Variables numériques
+      variables_numeriques <- names(
+        donnees[
+          sapply(donnees, is.numeric)
+        ]
+      )
+      
+      # Retirer la variable cible
+      variables_explicatives <- setdiff(
+        variables_numeriques,
+        "Niveau d'anxiété"
+      )
+      
+      req(length(variables_explicatives) >= 1)
+      
+      
       # Calcul des corrélations
-      # ---------------------------------------------------
-
       correlations <- sapply(
-        variables_predictives,
+        variables_explicatives,
         function(variable) {
-
+          
           cor(
             donnees[[variable]],
             donnees[["Niveau d'anxiété"]],
             use = "pairwise.complete.obs",
             method = "pearson"
           )
+          
         }
       )
-
-
-      # ---------------------------------------------------
-      # Dataframe
-      # ---------------------------------------------------
-
+      
+      
+      # Mise en dataframe
       df_cor <- data.frame(
         variable = names(correlations),
         correlation = as.numeric(correlations)
       )
-
-
-      # Retirer les NA
+      
+      
+      # Supprimer les valeurs manquantes
       df_cor <- df_cor |>
         filter(!is.na(correlation))
-
-
-      # ---------------------------------------------------
-      # Trier par corrélation
-      # ---------------------------------------------------
-
+      
+      
+      # Trier du plus négatif au plus positif
       df_cor <- df_cor |>
         arrange(correlation) |>
         mutate(
@@ -289,12 +279,12 @@ page_analyse_server <- function(id, donnees) {
             levels = variable
           )
         )
-
-
-      # ---------------------------------------------------
+      
+      
+      # ------------------------------------------------------
       # Graphique
-      # ---------------------------------------------------
-
+      # ------------------------------------------------------
+      
       ggplot(
         df_cor,
         aes(
@@ -303,14 +293,14 @@ page_analyse_server <- function(id, donnees) {
           fill = correlation
         )
       ) +
-
+        
         geom_col() +
-
+        
         geom_vline(
           xintercept = 0,
           linewidth = 0.7
         ) +
-
+        
         scale_fill_gradient2(
           low = "#2166AC",
           mid = "white",
@@ -318,27 +308,27 @@ page_analyse_server <- function(id, donnees) {
           midpoint = 0,
           limits = c(-1, 1)
         ) +
-
+        
         scale_x_continuous(
           limits = c(-1, 1)
         ) +
-
+        
         labs(
           x = "Coefficient de corrélation de Pearson",
           y = NULL
         ) +
-
-        theme_minimal(base_size = 12) +
-
+        
+        theme_minimal(
+          base_size = 12
+        ) +
+        
         theme(
           legend.position = "none",
-          axis.text.y = element_text(
-            size = 9
-          ),
+          axis.text.y = element_text(size = 9),
           panel.grid.major.y = element_blank()
         )
-
+      
     })
-
+    
   })
 }
