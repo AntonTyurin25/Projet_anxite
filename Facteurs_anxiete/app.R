@@ -1,4 +1,5 @@
 library(shiny)
+library(readr)
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
@@ -44,7 +45,7 @@ server <- function(input, output, session) {
   page_analyse_server("analyse",
                       donnees = donnees)
   
-  page_donnees_server("Modele",
+  page_donnees_server("modele",
                       donnees = donnees)
 }
 

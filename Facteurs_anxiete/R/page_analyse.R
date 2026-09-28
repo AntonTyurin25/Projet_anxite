@@ -14,7 +14,7 @@ page_analyse_server <- function(id, donnees) {
     
     output$graphique <- renderPlot({
       
-      hist(donnees$age)
+      hist(donnees$Age)
       
     })
     
