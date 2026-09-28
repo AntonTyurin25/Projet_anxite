@@ -2,6 +2,7 @@ library(shiny)
 library(readr)
 library(tidyverse)
 library(shinydashboard)
+library(skimr)
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 donnees <- donnees |>
   mutate(
