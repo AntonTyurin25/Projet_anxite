@@ -1,6 +1,14 @@
 library(shiny)
 library(readr)
+library(tidyverse)
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
+donnees <- donnees |>
+  mutate(
+    across(
+      where(is.character),
+      as.factor
+    )
+  )
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
 source("R/page_donnees.R")
