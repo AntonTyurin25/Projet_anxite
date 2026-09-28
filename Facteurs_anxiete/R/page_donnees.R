@@ -3,31 +3,19 @@ page_donnees_ui <- function(id) {
   ns <- NS(id)
   
   tagList(
-    
-    h2("Données"),
-    
-    fileInput(
-      ns("fichier"),
-      "Importer un fichier"
-    ),
-    
-    tableOutput(ns("table"))
+    plotOutput(ns("Table_Donnees"))
   )
 }
 
 
-page_donnees_server <- function(id) {
+page_donnees_server <- function(id, donnees) {
   
   moduleServer(id, function(input, output, session) {
     
-    donnees <- reactive({
-      req(input$fichier)
+    output$Table_Donnees <- renderTable({
       
-      read.csv(input$fichier$datapath)
-    })
-    
-    output$table <- renderTable({
-      donnees()
+      donnees
+      
     })
     
   })

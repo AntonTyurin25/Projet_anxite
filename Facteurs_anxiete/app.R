@@ -1,9 +1,10 @@
 library(shiny)
-
+donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
 source("R/page_donnees.R")
 source("R/page_analyse.R")
+source("R/page_modele.R")
 
 ui <- fluidPage(
   
@@ -24,6 +25,11 @@ ui <- fluidPage(
     tabPanel(
       "Analyse",
       page_analyse_ui("analyse")
+    )    ,
+    
+    tabPanel(
+      "Modele",
+      page_analyse_ui("modele")
     )
   )
 )
@@ -32,9 +38,14 @@ server <- function(input, output, session) {
   
   page_accueil_server("accueil")
   
-  page_donnees_server("donnees")
+  page_donnees_server("donnees",
+                      donnees = donnees)
   
-  page_analyse_server("analyse")
+  page_analyse_server("analyse",
+                      donnees = donnees)
+  
+  page_donnees_server("Modele",
+                      donnees = donnees)
 }
 
 shinyApp(ui, server)

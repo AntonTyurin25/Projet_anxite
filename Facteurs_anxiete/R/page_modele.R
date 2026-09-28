@@ -1,4 +1,4 @@
-page_analyse_ui <- function(id) {
+page_modele_ui <- function(id) {
   
   ns <- NS(id)
   
@@ -8,7 +8,7 @@ page_analyse_ui <- function(id) {
 }
 
 
-page_analyse_server <- function(id, donnees) {
+page_modele_server <- function(id, donnees) {
   
   moduleServer(id, function(input, output, session) {
     
