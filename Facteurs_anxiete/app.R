@@ -6,6 +6,8 @@ library(ggplot2)
 library(corrplot)
 library(dplyr)
 library(tidyr)
+library(skimr)
+library(DT)
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 donnees <- donnees |>
   mutate(
