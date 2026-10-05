@@ -61,14 +61,11 @@ page_donnees_server <- function(id, donnees) {
     
     observe({
       
-      vars_num <- names(donnees)[
-        vapply(donnees, is.numeric, logical(1))
-      ]
       
       updateSelectInput(
         session = session,
         inputId = "var",
-        choices = vars_num
+        choices = names(donnees)
       )
       
     })
@@ -84,7 +81,7 @@ page_donnees_server <- function(id, donnees) {
         
         hist(
           x,
-          col = "blue",
+          col = "steelblue",
           main = paste("Distribution de", input$var),
           xlab = input$var,
           ylab = "Effectif"
@@ -96,6 +93,7 @@ page_donnees_server <- function(id, donnees) {
         
         barplot(
           effectifs,
+          col = "steelblue",
           main = paste("Répartition de", input$var),
           xlab = input$var,
           ylab = "Effectif",
