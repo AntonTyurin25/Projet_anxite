@@ -6,11 +6,11 @@ library(ggplot2)
 library(corrplot)
 library(dplyr)
 library(tidyr)
+library(skimr)
+library(DT)
 
 # un graphique fixe possible a mettre en pdf pour expliquer le choix et en quoi c'est interessant
-  
-  
-  
+
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 donnees <- donnees |>
   mutate(
