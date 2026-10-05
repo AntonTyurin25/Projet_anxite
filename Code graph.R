@@ -20,11 +20,6 @@
 # 1. PACKAGES
 # ============================================================
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
 
 
 # ============================================================
@@ -34,7 +29,7 @@ library(factoextra)
 # Adapter le chemin si nécessaire selon l'organisation du projet
 
 data <- read.csv(
-  "data/enhanced_anxiety_dataset.csv",
+  "Facteurs_anxiete/data/enhanced_anxiety_dataset.csv",
   check.names = FALSE
 )
 
@@ -659,7 +654,7 @@ tab_acp <- data %>%
 
 
 res_acp <- PCA(
-  tab_acp,
+  tab_acp,ncp = 9,
   scale.unit = TRUE,
   graph = FALSE
 )
@@ -671,7 +666,7 @@ res_acp <- PCA(
 # ============================================================
 
 graph_eigenvalues <- fviz_eig(
-  res_acp,
+  res_acp,ncp = 9,
   addlabels = TRUE
 ) +
   

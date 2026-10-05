@@ -1,8 +1,7 @@
-library(readr)
-library(ggplot2)
+
 data <- read_csv("enhanced_anxiety_dataset.csv")
 
-library(corrplot)
+
 # on regarde la sturcture du modèle 
 str(data)
 summary(data)
@@ -26,8 +25,7 @@ unique(data$`Family History of Anxiety`)
 # et la variable cible : "Anxiety Level (1-10)".
 
 install.packages("GGally")
-library(GGally)
- library(ggcorrplot)
+
  
  
  vars_num <- c(
@@ -133,8 +131,7 @@ library(GGally)
  #
  # Des valeurs proches de 1 indiquent une faible redondance
  # entre les variables explicatives.
- 
- library(car)
+
  
  vif(mod1)
  
@@ -167,9 +164,7 @@ library(GGally)
  # graph 
  
  
- library(dplyr)
- library(tidyr)
- library(ggplot2)
+
  
  data_cat <- data %>%
    select(
@@ -356,7 +351,7 @@ R2_test
 
 
 
-library(glmnet)
+
 
 y_train <- train$`Anxiety Level (1-10)`
 
@@ -575,9 +570,6 @@ results <- data.frame(
 results
 
 
-library(tidyr)
-library(ggplot2)
-
 results_long <- results %>%
   pivot_longer(
     cols = c(RMSE, MAE, R2),
@@ -758,9 +750,6 @@ plot(mod_user)
 
 
 # Randomforest 
-install.packages("randomForest")
-library(randomForest)
-
 train_user <- train %>%
   select(
     `Anxiety Level (1-10)`,
@@ -804,7 +793,6 @@ test_user$`Recent Major Life Event` <- as.factor(test_user$`Recent Major Life Ev
 
 
 # on commence abec 500 arbres 
-library(randomForest)
 
 x_train_user <- train_user[, -which(
   names(train_user) == "Anxiety Level (1-10)"
@@ -921,8 +909,6 @@ results <- data.frame(
 
 
 # transformation des données 
-library(tidyr)
-library(ggplot2)
 
 results_long <- results %>%
   pivot_longer(
@@ -1202,8 +1188,6 @@ ggplot(
 
 
 #6 
-library(dplyr)
-library(tidyr)
 
 data_num <- data %>%
   select(
@@ -1262,8 +1246,6 @@ ggplot(
 
 
 # 7 ACP 
-library(FactoMineR)
-library(factoextra)
 
 data_acp <- data %>%
   select(
@@ -1331,18 +1313,7 @@ fviz_pca_biplot(
 # 0. PACKAGES
 # ============================================================
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
 
-# Si effectsize n'est pas installé :
-if (!requireNamespace("effectsize", quietly = TRUE)) {
-  install.packages("effectsize")
-}
-
-library(effectsize)
 
 
 # ============================================================
@@ -2035,12 +2006,6 @@ print(res_acp$eig)
 # VISUALISATIONS FINALES - PROJET ANXIETE
 # ============================================================
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
-library(scales)
 
 # ============================================================
 # PALETTE
@@ -2163,11 +2128,6 @@ ruptures$Transition <- factor(
 # VISUALISATIONS FINALES - PROJET ANXIETE
 # ============================================================
 
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
 
 
 # ============================================================
