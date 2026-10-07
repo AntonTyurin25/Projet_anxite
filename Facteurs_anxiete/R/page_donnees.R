@@ -5,7 +5,7 @@ page_donnees_ui <- function(id) {
   tagList(
     # plotOutput(ns("Table_Donnees")),
     
-    dataTableOutput(ns("Table_Donnees")),
+    DTOutput(ns("Table_Donnees")),
     
     verbatimTextOutput(ns("skim"))
   )
@@ -16,7 +16,7 @@ page_donnees_server <- function(id, donnees) {
   
   moduleServer(id, function(input, output, session) {
     
-    output$Table_Donnees <- renderDataTable({
+    output$Table_Donnees <- renderDT({
       
       donnees
       
