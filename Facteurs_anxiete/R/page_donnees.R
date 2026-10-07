@@ -61,50 +61,108 @@ description_variables <- data.frame(
   stringsAsFactors = FALSE
 )
 
+
+
 page_donnees_ui <- function(id) {
   
   ns <- NS(id)
   
-  tagList(
+  tabBox(
+    id = ns("tabs"),
+    width = 12,
     
-    fluidRow(
-      column(
-        width = 8,
+    # --------------------------------------------------
+    # ONGLET 1 : DONNÉES
+    # --------------------------------------------------
+    tabPanel(
+      title = "Données",
+      
+      box(
+        width = 12,
+        title = "Tableau des données",
+        status = "primary",
+        solidHeader = TRUE,
+        
         div(
-          style = "width: 100%; overflow-x: auto; overflow-y: auto",
+          style = "width: 100%; overflow-x: auto;",
           DTOutput(ns("Table_Donnees"))
         )
-      ),
+      )
+    ),
+    
+    
+    # --------------------------------------------------
+    # ONGLET 2 : RÉSUMÉ
+    # --------------------------------------------------
+    tabPanel(
+      title = "Résumé",
       
-      column(
-        width = 4,
+      box(
+        width = 12,
+        title = "Résumé des données",
+        status = "primary",
+        solidHeader = TRUE,
+        
         div(
-          style = "height: 500px; overflow-y: auto;",
+          style = "height: 600px; overflow-y: auto;",
           verbatimTextOutput(ns("skim"))
         )
       )
     ),
     
-    fluidRow(
-      column(
-        width = 6,
-        selectInput(
-          inputId = ns("var"),
-          label = "Variable :",
-          choices = NULL
+    
+    # --------------------------------------------------
+    # ONGLET 3 : DISTRIBUTION
+    # --------------------------------------------------
+    tabPanel(
+      title = "Distribution",
+      
+      box(
+        width = 12,
+        title = "Distribution d'une variable",
+        status = "primary",
+        solidHeader = TRUE,
+        
+        fluidRow(
+          
+          column(
+            width = 4,
+            
+            selectInput(
+              inputId = ns("var"),
+              label = "Variable :",
+              choices = NULL
+            )
+          )
+          
+        ),
+        
+        hr(),
+        
+        plotOutput(
+          ns("distribution"),
+          height = "500px"
         )
       )
     ),
     
-    fluidRow(
-      column(
-        width = 6,
-        plotOutput(ns("distribution"))
-      ),
+    
+    # --------------------------------------------------
+    # ONGLET 4 : DESCRIPTION
+    # --------------------------------------------------
+    tabPanel(
+      title = "Description des variables",
       
-      column(
-        width = 6,
-        DTOutput(ns("Description"))
+      box(
+        width = 12,
+        title = "Description des variables",
+        status = "primary",
+        solidHeader = TRUE,
+        
+        div(
+          style = "width: 100%; overflow-x: auto;",
+          DTOutput(ns("Description"))
+        )
       )
     )
   )
@@ -115,29 +173,52 @@ page_donnees_server <- function(id, donnees) {
   
   moduleServer(id, function(input, output, session) {
     
+    
+    # --------------------------------------------------
+    # TABLEAU DES DONNÉES
+    # --------------------------------------------------
+    
     output$Table_Donnees <- renderDT({
+      
       donnees
+      
     }, options = list(
-      scrollX = TRUE, scrollY = TRUE
+      scrollX = TRUE,
+      pageLength = 10,
+      autoWidth = TRUE
     ))
     
     
+    # --------------------------------------------------
+    # RÉSUMÉ SKIM
+    # --------------------------------------------------
+    
     output$skim <- renderPrint({
-      skim(donnees)
+      
+      skimr::skim(donnees)
+      
     })
     
     
+    # --------------------------------------------------
+    # LISTE DES VARIABLES
+    # --------------------------------------------------
+    
     observe({
-      
       
       updateSelectInput(
         session = session,
         inputId = "var",
-        choices = names(donnees)
+        choices = names(donnees),
+        selected = names(donnees)[1]
       )
       
     })
     
+    
+    # --------------------------------------------------
+    # GRAPHIQUE DE DISTRIBUTION
+    # --------------------------------------------------
     
     output$distribution <- renderPlot({
       
@@ -145,16 +226,21 @@ page_donnees_server <- function(id, donnees) {
       
       x <- donnees[[input$var]]
       
+      
+      # Variable quantitative
       if (is.numeric(x)) {
         
         hist(
           x,
           col = "steelblue",
-          main = paste("Distribution de", input$var),
+          border = "white",
+          main = paste("Distribution", input$var),
           xlab = input$var,
           ylab = "Effectif"
         )
         
+        
+        # Variable qualitative
       } else {
         
         effectifs <- table(x, useNA = "ifany")
@@ -162,7 +248,8 @@ page_donnees_server <- function(id, donnees) {
         barplot(
           effectifs,
           col = "steelblue",
-          main = paste("Répartition de", input$var),
+          border = "white",
+          main = paste("Répartition", input$var),
           xlab = input$var,
           ylab = "Effectif",
           las = 2
@@ -172,11 +259,21 @@ page_donnees_server <- function(id, donnees) {
       
     })
     
+    
+    # --------------------------------------------------
+    # DESCRIPTION DES VARIABLES
+    # --------------------------------------------------
+    
     output$Description <- renderDT({
+      
       description_variables
+      
     }, options = list(
-      scrollX = TRUE, scrollY = TRUE
+      scrollX = TRUE,
+      pageLength = 19,
+      autoWidth = TRUE
     ))
     
   })
 }
+
