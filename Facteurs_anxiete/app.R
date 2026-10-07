@@ -8,7 +8,21 @@ library(dplyr)
 library(tidyr)
 library(skimr)
 library(DT)
-donnees <- read_csv("Facteurs_anxiete/data/enhanced_anxiety_dataset.csv")
+library(GGally)
+library(ggcorrplot)
+library(car)
+library(glmnet)
+library(randomForest)
+library(FactoMineR)
+library(factoextra)
+library(effectsize)
+library(scales)
+
+
+# un graphique fixe possible a mettre en pdf pour expliquer le choix et en quoi c'est interessant
+# en vrai la ârtie acp peut etre fixe, en forme d'images d'on peut switch avec un bouton ,genre coloré selon la groupe d'anxieté, ou la profession, ou excetera.
+
+donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 donnees <- donnees |>
   mutate(
     across(
@@ -42,7 +56,7 @@ source("R/page_accueil.R")
 source("R/page_donnees.R")
 source("R/page_analyse.R")
 source("R/page_modele.R")
-
+modeles <- readRDS("models/modeles_anxiete.rds")
 ui <- dashboardPage(
   
   # --------------------------------------------------
@@ -186,8 +200,8 @@ server <- function(input, output, session) {
   page_analyse_server("analyse",
                       donnees = donnees)
   
-  page_donnees_server("modele",
-                      donnees = donnees)
+  page_modele_server("modele",
+                      donnees = donnees, modeles)
 }
 
 shinyApp(ui, server)
