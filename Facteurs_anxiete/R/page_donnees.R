@@ -41,7 +41,7 @@ description_variables <- data.frame(
   }),
   Description = c("Âge de l'individu (années)",
                   "Homme/Femme/Autre",
-                  "",
+                  "Artiste/Athlète/Avocat/Chef-cuisinier/Etudiant/Freelance/Infirmier/Ingénieur/Médecin/Musicien/Professeur/Scientifique/Autre",
                   "Heures de sommeil par nuit",
                   "Heures d'activité physique par semaine",
                   "Quantité de caféine ingérée (mg/jour)",
@@ -99,13 +99,39 @@ page_donnees_ui <- function(id) {
       
       box(
         width = 12,
-        title = "Résumé des données",
+        title = "Vue d'ensemble des données",
         status = "primary",
         solidHeader = TRUE,
         
-        div(
-          style = "height: 600px; overflow-y: auto;",
-          verbatimTextOutput(ns("skim"))
+        fluidRow(
+          valueBoxOutput(ns("nb_individus"), width = 3),
+          valueBoxOutput(ns("age_moyen"), width = 3),
+          valueBoxOutput(ns("anxiete_moyenne"), width = 3),
+          valueBoxOutput(ns("anxiete_elevee"), width = 3)
+        )
+      ),
+      
+      fluidRow(
+        column(
+          width = 6,
+          box(
+            width = 12,
+            title = "Répartition par sexe",
+            status = "primary",
+            solidHeader = TRUE,
+            plotOutput(ns("resume_sexe"), height = "300px")
+          )
+        ),
+        
+        column(
+          width = 6,
+          box(
+            width = 12,
+            title = "Répartition des professions",
+            status = "primary",
+            solidHeader = TRUE,
+            plotOutput(ns("resume_professions"), height = "350px")
+          )
         )
       )
     ),
@@ -190,15 +216,131 @@ page_donnees_server <- function(id, donnees) {
     
     
     # --------------------------------------------------
-    # RÉSUMÉ SKIM
+    # RÉSUMÉ
     # --------------------------------------------------
     
-    output$skim <- renderPrint({
+    # Nombre d'individus
+    output$nb_individus <- renderValueBox({
+      valueBox(
+        value = format(nrow(donnees), big.mark = " "),
+        subtitle = "Individus",
+        icon = icon("users"),
+        color = "blue"
+      )
+    })
+
+    # Âge moyen
+    output$age_moyen <- renderValueBox({
+      age <- donnees[["Âge"]]
       
-      skimr::skim(donnees)
+      moyenne <- if (is.numeric(age) && any(!is.na(age))) {
+        round(mean(age, na.rm = TRUE), 1)
+      } else {
+        "Non disponible"
+      }
       
+      valueBox(
+        value = moyenne,
+        subtitle = "Âge moyen (ans)",
+        icon = icon("user"),
+        color = "purple"
+      )
     })
     
+    # Niveau moyen d'anxiété
+    output$anxiete_moyenne <- renderValueBox({
+      
+      anxiete <- donnees[["Niveau d'anxiété"]]
+      
+      moyenne <- if (is.numeric(anxiete) &&
+                     any(!is.na(anxiete))) {
+        round(mean(anxiete, na.rm = TRUE), 1)
+      } else {
+        NA_real_
+      }
+      
+      valueBox(
+        value = if (is.na(moyenne)) "N/D" else paste0(moyenne, "/10"),
+        subtitle = "Niveau moyen d'anxiété",
+        icon = icon("heartbeat"),
+        color = "purple"
+      )
+    })
+    
+    
+    # Pourcentage de niveaux d'anxiété élevés
+    output$anxiete_elevee <- renderValueBox({
+      
+      anxiete <- donnees[["Niveau d'anxiété"]]
+      
+      if (!is.numeric(anxiete) || all(is.na(anxiete))) {
+        resultat <- "N/D"
+      } else {
+        resultat <- paste0(
+          round(mean(anxiete >= 8, na.rm = TRUE) * 100, 1),
+          "%"
+        )
+      }
+      
+      valueBox(
+        value = resultat,
+        subtitle = "Anxiété élevée (score ≥ 8)",
+        icon = icon("chart-line"),
+        color = "yellow"
+      )
+    })
+    
+    # Répartition par sexe
+    output$resume_sexe <- renderPlot({
+      sexe <- donnees[["Sexe"]]
+      
+      req(!is.null(sexe))
+      
+      effectifs <- table(sexe, useNA = "no")
+      req(length(effectifs) > 0)
+      
+      barplot(
+        effectifs,
+        col = "steelblue",
+        border = "white",
+        main = "",
+        xlab = "Sexe",
+        ylab = "Nombre d'individus",
+        las = 1
+      )
+    })
+    
+    # Répartition des professions
+    
+    output$resume_professions <- renderPlot({
+      
+      profession <- donnees[["Profession"]]
+      
+      req(!is.null(profession))
+      
+      effectifs <- sort(
+        table(profession, useNA = "ifany"),
+        decreasing = TRUE
+      )
+      
+      req(length(effectifs) > 0)
+      
+      # Barres horizontales, triées par effectif décroissant
+      par(mar = c(5, 10, 2, 1))
+      
+      barplot(
+        effectifs,
+        horiz = TRUE,
+        col = "steelblue",
+        border = "white",
+        main = "",
+        xlab = "Nombre d'individus",
+        ylab = "",
+        las = 1,
+        cex.names = 0.8
+      )
+      
+    })
     
     # --------------------------------------------------
     # LISTE DES VARIABLES
@@ -210,7 +352,7 @@ page_donnees_server <- function(id, donnees) {
         session = session,
         inputId = "var",
         choices = names(donnees),
-        selected = names(donnees)[1]
+        selected = "Niveau d'anxiété"
       )
       
     })
