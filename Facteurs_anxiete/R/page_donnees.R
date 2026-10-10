@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+
 donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
 donnees <- donnees |>
   mutate(
@@ -8,6 +9,7 @@ donnees <- donnees |>
       as.factor
     )
   )
+
 names(donnees) <- c(
   "Âge",
   "Sexe",
@@ -30,8 +32,10 @@ names(donnees) <- c(
   "Niveau d'anxiété"
 )
 
+
 description_variables <- data.frame(
   Variable = names(donnees),
+  
   Type = sapply(donnees, function(x) {
     if (is.numeric(x)) {
       "Quantitative"
@@ -39,29 +43,118 @@ description_variables <- data.frame(
       "Qualitative"
     }
   }),
-  Description = c("Âge de l'individu (années)",
-                  "Homme/Femme/Autre",
-                  "Artiste/Athlète/Avocat/Chef-cuisinier/Etudiant/Freelance/Infirmier/Ingénieur/Médecin/Musicien/Professeur/Scientifique/Autre",
-                  "Heures de sommeil par nuit",
-                  "Heures d'activité physique par semaine",
-                  "Quantité de caféine ingérée (mg/jour)",
-                  "Quantité de verres d'alcool consommés par semaine",
-                  "L'individu fume: Oui/Non",
-                  "Des membres de la famille sont affectés par l'anxiété: Oui/Non",
-                  "De 1 à 10",
-                  "Nombre de battements par minute",
-                  "Nombre d'inspirations-expirations par minute",
-                  "De 1 à 5",
-                  "L'individu est atteint de vertiges: Oui/Non",
-                  "L'individu suit un traitement: Oui/Non",
-                  "Quantité de séances de thérapie par mois",
-                  "L'individu a vécu un événement majeur récemment: Oui/Non",
-                  "De 1 à 10",
-                  "De 1 à 10"),
+  
+  Description = c(
+    "Âge de l'individu (années)",
+    "Homme/Femme/Autre",
+    paste(
+      "Artiste/Athlète/Avocat/Chef-cuisinier/",
+      "Etudiant/Freelance/Infirmier/Ingénieur/",
+      "Médecin/Musicien/Professeur/Scientifique/Autre",
+      sep = ""
+    ),
+    "Heures de sommeil par nuit",
+    "Heures d'activité physique par semaine",
+    "Quantité de caféine ingérée (mg/jour)",
+    "Quantité de verres d'alcool consommés par semaine",
+    "L'individu fume : Oui/Non",
+    "Des membres de la famille sont affectés par l'anxiété : Oui/Non",
+    "De 1 à 10",
+    "Nombre de battements par minute",
+    "Nombre d'inspirations-expirations par minute",
+    "De 1 à 5",
+    "L'individu est atteint de vertiges : Oui/Non",
+    "L'individu suit un traitement : Oui/Non",
+    "Quantité de séances de thérapie par mois",
+    "L'individu a vécu un événement majeur récemment : Oui/Non",
+    "De 1 à 10",
+    "De 1 à 10"
+  ),
+  
   stringsAsFactors = FALSE
 )
 
 
+# ==========================================================
+# FONCTION POUR LES GRAPHIQUES
+# ==========================================================
+
+# Thème graphique commun à tous les graphiques
+theme_graphique <- function() {
+  ggplot2::theme_minimal(base_size = 14) +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(
+        size = 19, face = "bold", hjust = 0
+      ),
+      axis.title.x = ggplot2::element_text(
+        size = 16, face = "bold",
+        margin = ggplot2::margin(t = 12)
+      ),
+      axis.title.y = ggplot2::element_text(
+        size = 16, face = "bold",
+        margin = ggplot2::margin(r = 12)
+      ),
+      axis.text = ggplot2::element_text(
+        size = 13, colour = "black"
+      ),
+      panel.grid.minor = ggplot2::element_blank(),
+      plot.margin = ggplot2::margin(
+        t = 15, r = 20, b = 25, l = 20
+      )
+    )
+}
+
+
+# Fonction pour compter les modalités d'une variable
+compter_modalites <- function(x) {
+  
+  valeurs <- as.character(x)
+  
+  valeurs[is.na(valeurs)] <- "Valeurs manquantes"
+  
+  effectifs <- as.data.frame(
+    table(valeurs),
+    stringsAsFactors = FALSE
+  )
+  
+  names(effectifs) <- c("Modalite", "Effectif")
+  
+  effectifs <- effectifs |>
+    arrange(desc(Effectif))
+  
+  effectifs
+}
+
+
+# Fonction pour rendre un graphique interactif
+rendre_interactif <- function(graphique) {
+  
+  ggplotly(
+    graphique,
+    tooltip = "text"
+  ) |>
+    layout(
+      hoverlabel = list(
+        font = list(size = 14)
+      ),
+      
+      margin = list(
+        l = 75,
+        r = 25,
+        t = 45,
+        b = 80
+      )
+    ) |>
+    config(
+      displaylogo = FALSE,
+      responsive = TRUE
+    )
+}
+
+
+# ==========================================================
+# INTERFACE UTILISATEUR
+# ==========================================================
 
 page_donnees_ui <- function(id) {
   
@@ -71,29 +164,10 @@ page_donnees_ui <- function(id) {
     id = ns("tabs"),
     width = 12,
     
-    # --------------------------------------------------
-    # ONGLET 1 : DONNÉES
-    # --------------------------------------------------
-    tabPanel(
-      title = "Données",
-      
-      box(
-        width = 12,
-        title = "Tableau des données",
-        status = "primary",
-        solidHeader = TRUE,
-        
-        div(
-          style = "width: 100%; overflow-x: auto;",
-          DTOutput(ns("Table_Donnees"))
-        )
-      )
-    ),
+    # ------------------------------------------------------
+    # ONGLET 1 : RÉSUMÉ
+    # ------------------------------------------------------
     
-    
-    # --------------------------------------------------
-    # ONGLET 2 : RÉSUMÉ
-    # --------------------------------------------------
     tabPanel(
       title = "Résumé",
       
@@ -104,42 +178,69 @@ page_donnees_ui <- function(id) {
         solidHeader = TRUE,
         
         fluidRow(
-          valueBoxOutput(ns("nb_individus"), width = 3),
-          valueBoxOutput(ns("age_moyen"), width = 3),
-          valueBoxOutput(ns("anxiete_moyenne"), width = 3),
-          valueBoxOutput(ns("anxiete_elevee"), width = 3)
+          valueBoxOutput(
+            ns("nb_individus"),
+            width = 3
+          ),
+          
+          valueBoxOutput(
+            ns("age_moyen"),
+            width = 3
+          ),
+          
+          valueBoxOutput(
+            ns("anxiete_moyenne"),
+            width = 3
+          ),
+          
+          valueBoxOutput(
+            ns("anxiete_elevee"),
+            width = 3
+          )
         )
       ),
       
       fluidRow(
+        
         column(
           width = 6,
+          
           box(
             width = 12,
             title = "Répartition par sexe",
             status = "primary",
             solidHeader = TRUE,
-            plotOutput(ns("resume_sexe"), height = "300px")
+            
+            plotlyOutput(
+              ns("resume_sexe"),
+              height = "350px"
+            )
           )
         ),
         
         column(
           width = 6,
+          
           box(
             width = 12,
             title = "Répartition des professions",
             status = "primary",
             solidHeader = TRUE,
-            plotOutput(ns("resume_professions"), height = "350px")
+            
+            plotlyOutput(
+              ns("resume_professions"),
+              height = "400px"
+            )
           )
         )
       )
     ),
     
     
-    # --------------------------------------------------
-    # ONGLET 3 : DISTRIBUTION
-    # --------------------------------------------------
+    # ------------------------------------------------------
+    # ONGLET 2 : DISTRIBUTION
+    # ------------------------------------------------------
+    
     tabPanel(
       title = "Distribution",
       
@@ -152,30 +253,30 @@ page_donnees_ui <- function(id) {
         fluidRow(
           
           column(
-            width = 4,
+            width = 6,
             
             selectInput(
               inputId = ns("var"),
-              label = "Variable :",
+              label = "Variable à étudier :",
               choices = NULL
             )
           )
-          
         ),
         
         hr(),
         
-        plotOutput(
+        plotlyOutput(
           ns("distribution"),
-          height = "500px"
+          height = "550px"
         )
       )
     ),
     
     
-    # --------------------------------------------------
-    # ONGLET 4 : DESCRIPTION
-    # --------------------------------------------------
+    # ------------------------------------------------------
+    # ONGLET 3 : DESCRIPTION DES VARIABLES
+    # ------------------------------------------------------
+    
     tabPanel(
       title = "Description des variables",
       
@@ -187,7 +288,34 @@ page_donnees_ui <- function(id) {
         
         div(
           style = "width: 100%; overflow-x: auto;",
-          DTOutput(ns("Description"))
+          
+          DTOutput(
+            ns("Description")
+          )
+        )
+      )
+    ),
+    
+    
+    # ------------------------------------------------------
+    # ONGLET 4 : DONNÉES (EN DERNIER)
+    # ------------------------------------------------------
+    
+    tabPanel(
+      title = "Données",
+      
+      box(
+        width = 12,
+        title = "Tableau des données",
+        status = "primary",
+        solidHeader = TRUE,
+        
+        div(
+          style = "width: 100%; overflow-x: auto;",
+          
+          DTOutput(
+            ns("Table_Donnees")
+          )
         )
       )
     )
@@ -195,14 +323,18 @@ page_donnees_ui <- function(id) {
 }
 
 
+# ==========================================================
+# SERVEUR
+# ==========================================================
+
 page_donnees_server <- function(id, donnees) {
   
   moduleServer(id, function(input, output, session) {
     
     
-    # --------------------------------------------------
+    # ------------------------------------------------------
     # TABLEAU DES DONNÉES
-    # --------------------------------------------------
+    # ------------------------------------------------------
     
     output$Table_Donnees <- renderDT({
       
@@ -215,136 +347,227 @@ page_donnees_server <- function(id, donnees) {
     ))
     
     
-    # --------------------------------------------------
-    # RÉSUMÉ
-    # --------------------------------------------------
+    # ------------------------------------------------------
+    # VUE D'ENSEMBLE : NOMBRE D'INDIVIDUS
+    # ------------------------------------------------------
     
-    # Nombre d'individus
     output$nb_individus <- renderValueBox({
+      
       valueBox(
-        value = format(nrow(donnees), big.mark = " "),
+        value = format(
+          nrow(donnees),
+          big.mark = " "
+        ),
+        
         subtitle = "Individus",
+        
         icon = icon("users"),
+        
         color = "blue"
       )
     })
-
-    # Âge moyen
+    
+    
+    # ------------------------------------------------------
+    # VUE D'ENSEMBLE : ÂGE MOYEN
+    # ------------------------------------------------------
+    
     output$age_moyen <- renderValueBox({
+      
       age <- donnees[["Âge"]]
       
-      moyenne <- if (is.numeric(age) && any(!is.na(age))) {
+      moyenne <- if (
+        is.numeric(age) &&
+        any(!is.na(age))
+      ) {
         round(mean(age, na.rm = TRUE), 1)
       } else {
-        "Non disponible"
+        NA_real_
       }
       
       valueBox(
-        value = moyenne,
+        value = if (is.na(moyenne)) {
+          "N/D"
+        } else {
+          moyenne
+        },
+        
         subtitle = "Âge moyen (ans)",
+        
         icon = icon("user"),
+        
         color = "purple"
       )
     })
     
-    # Niveau moyen d'anxiété
+    
+    # ------------------------------------------------------
+    # VUE D'ENSEMBLE : ANXIÉTÉ MOYENNE
+    # ------------------------------------------------------
+    
     output$anxiete_moyenne <- renderValueBox({
       
       anxiete <- donnees[["Niveau d'anxiété"]]
       
-      moyenne <- if (is.numeric(anxiete) &&
-                     any(!is.na(anxiete))) {
+      moyenne <- if (
+        is.numeric(anxiete) &&
+        any(!is.na(anxiete))
+      ) {
         round(mean(anxiete, na.rm = TRUE), 1)
       } else {
         NA_real_
       }
       
       valueBox(
-        value = if (is.na(moyenne)) "N/D" else paste0(moyenne, "/10"),
+        value = if (is.na(moyenne)) {
+          "N/D"
+        } else {
+          paste0(moyenne, "/10")
+        },
+        
         subtitle = "Niveau moyen d'anxiété",
-        icon = icon("heartbeat"),
-        color = "purple"
+        
+        icon = icon("brain"),
+        
+        color = "fuchsia"
       )
     })
     
     
-    # Pourcentage de niveaux d'anxiété élevés
+    # ------------------------------------------------------
+    # VUE D'ENSEMBLE : ANXIÉTÉ ÉLEVÉE
+    # ------------------------------------------------------
+    
     output$anxiete_elevee <- renderValueBox({
       
       anxiete <- donnees[["Niveau d'anxiété"]]
       
-      if (!is.numeric(anxiete) || all(is.na(anxiete))) {
-        resultat <- "N/D"
+      resultat <- if (
+        !is.numeric(anxiete) ||
+        all(is.na(anxiete))
+      ) {
+        "N/D"
       } else {
-        resultat <- paste0(
-          round(mean(anxiete >= 8, na.rm = TRUE) * 100, 1),
+        paste0(
+          round(
+            mean(anxiete >= 8, na.rm = TRUE) * 100,
+            1
+          ),
           "%"
         )
       }
       
       valueBox(
         value = resultat,
+        
         subtitle = "Anxiété élevée (score ≥ 8)",
-        icon = icon("chart-line"),
+        
+        icon = icon("gauge"),
+        
         color = "yellow"
       )
     })
     
-    # Répartition par sexe
-    output$resume_sexe <- renderPlot({
+    
+    # ------------------------------------------------------
+    # RÉSUMÉ : RÉPARTITION PAR SEXE
+    # ------------------------------------------------------
+    
+    output$resume_sexe <- renderPlotly({
+      
       sexe <- donnees[["Sexe"]]
       
       req(!is.null(sexe))
       
-      effectifs <- table(sexe, useNA = "no")
-      req(length(effectifs) > 0)
+      effectifs <- compter_modalites(sexe)
       
-      barplot(
+      graphique <- ggplot(
         effectifs,
-        col = "steelblue",
-        border = "white",
-        main = "",
-        xlab = "Sexe",
-        ylab = "Nombre d'individus",
-        las = 1
-      )
+        aes(
+          x = reorder(Modalite, -Effectif),
+          y = Effectif,
+          text = paste0(
+            "Sexe : ", Modalite,
+            "<br>Effectif : ", Effectif
+          )
+        )
+      ) +
+        
+        geom_col(
+          fill = "steelblue",
+          width = 0.70
+        ) +
+        
+        labs(
+          x = "Sexe",
+          y = "Nombre d'individus"
+        ) +
+        
+        theme_graphique() +
+        
+        theme(
+          axis.text.x = element_text(
+            angle = 0,
+            hjust = 0.5
+          )
+        )
+      
+      rendre_interactif(graphique)
     })
     
-    # Répartition des professions
     
-    output$resume_professions <- renderPlot({
+    # ------------------------------------------------------
+    # RÉSUMÉ : RÉPARTITION DES PROFESSIONS
+    # ------------------------------------------------------
+    
+    output$resume_professions <- renderPlotly({
       
       profession <- donnees[["Profession"]]
       
       req(!is.null(profession))
       
-      effectifs <- sort(
-        table(profession, useNA = "ifany"),
-        decreasing = TRUE
-      )
+      effectifs <- compter_modalites(profession) |>
+        arrange(Effectif)
       
-      req(length(effectifs) > 0)
-      
-      # Barres horizontales, triées par effectif décroissant
-      par(mar = c(5, 10, 2, 1))
-      
-      barplot(
+      graphique <- ggplot(
         effectifs,
-        horiz = TRUE,
-        col = "steelblue",
-        border = "white",
-        main = "",
-        xlab = "Nombre d'individus",
-        ylab = "",
-        las = 1,
-        cex.names = 0.8
-      )
+        aes(
+          x = Effectif,
+          y = reorder(Modalite, Effectif),
+          text = paste0(
+            "Profession : ", Modalite,
+            "<br>Effectif : ", Effectif
+          )
+        )
+      ) +
+        
+        geom_col(
+          fill = "steelblue",
+          width = 0.70
+        ) +
+        
+        labs(
+          x = "Nombre d'individus",
+          y = NULL
+        ) +
+        
+        theme_graphique() +
+        
+        ggplot2::theme(
+          axis.text.y = ggplot2::element_text(size = 12),
+          
+          axis.title.x = ggplot2::element_text(
+            margin = ggplot2::margin(t = 15)
+          )
+        )
       
+      rendre_interactif(graphique)
     })
     
-    # --------------------------------------------------
+    
+    # ------------------------------------------------------
     # LISTE DES VARIABLES
-    # --------------------------------------------------
+    # ------------------------------------------------------
     
     observe({
       
@@ -358,53 +581,185 @@ page_donnees_server <- function(id, donnees) {
     })
     
     
-    # --------------------------------------------------
+    # ------------------------------------------------------
     # GRAPHIQUE DE DISTRIBUTION
-    # --------------------------------------------------
+    # ------------------------------------------------------
     
-    output$distribution <- renderPlot({
+    output$distribution <- renderPlotly({
       
       req(input$var)
       
       x <- donnees[[input$var]]
       
+      nom_variable <- input$var
       
-      # Variable quantitative
-      if (is.numeric(x)) {
+      
+      # ----------------------------------------------------
+      # VARIABLES QUANTITATIVES ORDINALES
+      #
+      # Les scores entiers de stress et d'anxiété sont
+      # représentés par des barres distinctes.
+      # Cela évite de coller les barres de l'histogramme.
+      # ----------------------------------------------------
+      
+      variables_ordinales <- c(
+        "Niveau de stress",
+        "Niveau d'anxiété",
+        "Niveau de transpiration",
+        "Qualité de l'alimentation"
+      )
+      
+      if (
+        is.numeric(x) &&
+        nom_variable %in% variables_ordinales
+      ) {
         
-        hist(
-          x,
-          col = "steelblue",
-          border = "white",
-          main = paste("Distribution", input$var),
-          xlab = input$var,
-          ylab = "Effectif"
+        valeurs <- x[!is.na(x)]
+        
+        req(length(valeurs) > 0)
+        
+        effectifs <- as.data.frame(
+          table(valeurs),
+          stringsAsFactors = FALSE
         )
         
+        names(effectifs) <- c(
+          "Modalite",
+          "Effectif"
+        )
         
-        # Variable qualitative
+        effectifs$Modalite <- as.numeric(
+          as.character(effectifs$Modalite)
+        )
+        
+        effectifs <- effectifs |>
+          arrange(Modalite)
+        
+        graphique <- ggplot(
+          effectifs,
+          aes(
+            x = factor(Modalite),
+            y = Effectif,
+            text = paste0(
+              nom_variable, " : ", Modalite,
+              "<br>Effectif : ", Effectif
+            )
+          )
+        ) +
+          
+          geom_col(
+            fill = "steelblue",
+            width = 0.70
+          ) +
+          
+          labs(
+            title = paste(
+              "Répartition de", nom_variable
+            ),
+            x = nom_variable,
+            y = "Effectif"
+          ) +
+          
+          theme_graphique()
+        
+        
+        # ----------------------------------------------------
+        # AUTRES VARIABLES QUANTITATIVES
+        # ----------------------------------------------------
+        
+      } else if (is.numeric(x)) {
+        
+        valeurs <- x[!is.na(x)]
+        
+        req(length(valeurs) > 0)
+        
+        graphique <- ggplot(
+          data.frame(Valeur = valeurs),
+          aes(
+            x = Valeur,
+            text = after_stat(
+              paste0(
+                "Intervalle : ",
+                round(xmin, 2),
+                " à ",
+                round(xmax, 2),
+                "<br>Effectif : ",
+                count
+              )
+            )
+          )
+        ) +
+          
+          geom_histogram(
+            aes(y = after_stat(count)),
+            bins = 30,
+            fill = "steelblue",
+            colour = "white",
+            closed = "right"
+          ) +
+          
+          labs(
+            title = paste(
+              "Distribution de", nom_variable
+            ),
+            x = nom_variable,
+            y = "Effectif"
+          ) +
+          
+          theme_graphique()
+        
+        
+        # ----------------------------------------------------
+        # VARIABLES QUALITATIVES
+        # ----------------------------------------------------
+        
       } else {
         
-        effectifs <- table(x, useNA = "ifany")
+        effectifs <- compter_modalites(x) |>
+          arrange(Effectif)
         
-        barplot(
+        graphique <- ggplot(
           effectifs,
-          col = "steelblue",
-          border = "white",
-          main = paste("Répartition", input$var),
-          xlab = input$var,
-          ylab = "Effectif",
-          las = 2
-        )
-        
+          aes(
+            x = Effectif,
+            y = reorder(Modalite, Effectif),
+            text = paste0(
+              nom_variable, " : ", Modalite,
+              "<br>Effectif : ", Effectif
+            )
+          )
+        ) +
+          
+          geom_col(
+            fill = "steelblue",
+            width = 0.70
+          ) +
+          
+          labs(
+            title = paste(
+              "Répartition de", nom_variable
+            ),
+            x = "Effectif",
+            y = nom_variable
+          ) +
+          
+          theme_graphique() +
+          
+          theme(
+            axis.text.y = element_text(size = 12)
+          )
       }
+      
+      
+      # Affichage interactif avec infobulles
+      rendre_interactif(graphique)
       
     })
     
     
-    # --------------------------------------------------
+    # ------------------------------------------------------
     # DESCRIPTION DES VARIABLES
-    # --------------------------------------------------
+    # ------------------------------------------------------
     
     output$Description <- renderDT({
       
@@ -418,4 +773,3 @@ page_donnees_server <- function(id, donnees) {
     
   })
 }
-
