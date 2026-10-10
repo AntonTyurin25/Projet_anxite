@@ -8,7 +8,13 @@ library(dplyr)
 library(tidyr)
 library(skimr)
 library(DT)
-donnees <- read_csv("data/enhanced_anxiety_dataset.csv")
+
+# un graphique fixe possible a mettre en pdf pour expliquer le choix et en quoi c'est interessant
+
+donnees <- read_csv(
+  "data/enhanced_anxiety_dataset.csv",
+  show_col_types = FALSE
+)
 donnees <- donnees |>
   mutate(
     across(
@@ -83,15 +89,15 @@ ui <- dashboardPage(
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Anton Tyurin")
+          tags$a(icon("user"),"Anton Tyurin")
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Augustin Barnerias")
+          tags$a(icon("user"),"Augustin Barnerias")
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Ines Bouzida")
+          tags$a(icon("user"),"Ines Bouzida")
         )
       )
     )
@@ -180,14 +186,20 @@ server <- function(input, output, session) {
   
   page_accueil_server("accueil")
   
-  page_donnees_server("donnees",
-                      donnees = donnees)
+  page_donnees_server(
+    "donnees",
+    donnees = donnees
+  )
   
-  page_analyse_server("analyse",
-                      donnees = donnees)
+  page_analyse_server(
+    "analyse",
+    donnees = donnees
+  )
   
-  page_donnees_server("modele",
-                      donnees = donnees)
+  page_modele_server(
+    "modele",
+    donnees = donnees
+  )
 }
 
 shinyApp(ui, server)
