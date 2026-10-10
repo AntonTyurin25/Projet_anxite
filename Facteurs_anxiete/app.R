@@ -52,7 +52,7 @@ names(donnees) <- c(
   "Qualité de l'alimentation",
   "Niveau d'anxiété"
 )
-# Charger tous les fichiers R du dossier R/
+
 source("R/page_accueil.R")
 source("R/page_donnees.R")
 source("R/page_structure.R")
