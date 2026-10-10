@@ -10,99 +10,69 @@ donnees <- donnees |>
       as.factor
     )
   )
-names(donnees) <- c(
-  "Âge",
-  "Sexe",
-  "Profession",
-  "Heures de sommeil",
-  "Activité physique",
-  "Caféine consommée",
-  "Consommation d'alcool",
-  "Tabagisme",
-  "Antécédents familiaux d'anxiété",
-  "Niveau de stress",
-  "Fréquence cardiaque",
-  "Fréquence respiratoire",
-  "Niveau de transpiration",
-  "Vertiges",
-  "Médication",
-  "Séances de thérapie",
-  "Événement de vie récent",
-  "Qualité de l'alimentation",
-  "Niveau d'anxiété"
-)
-# donnees_afbm <- donnees 
-# anxiete <- donnees$`Niveau d'anxiété`
-# res_afbm <- FAMD(
-#   donnees_afbm,
-#   graph = FALSE
-# )
-# res_factoshiny <- Factoshiny(res_afbm)
-# # Factoshiny(donnees_afbm)
 
-
-
-# prop.table(table(donnees$Profession))
-library(MASS)
-
-donnees_afd <- donnees |>
-  dplyr::select(
-    where(is.numeric),
-    Profession
-  ) |>
-  na.omit()
-
-modele_afd <- lda(
-  Profession ~ .,
-  data = donnees_afd
-)
-
-modele_afd
-prediction <- predict(modele_afd)
-
-coord <- as.data.frame(prediction$x)
-
-coord$Profession <- donnees_afd$Profession
+library(dplyr)
+library(tidyr)
 library(ggplot2)
 
-ggplot(
-  coord,
-  aes(
-    x = LD1,
-    y = LD2,
-    colour = Profession
-  )
-) +
-  geom_point(
-    alpha = 0.7,
-    size = 2.5
+# 1. Créer les groupes d'anxiété
+data_cat <- donnees %>%
+  mutate(Groupe = ifelse(`Anxiety Level` (1-10) >= 8,
+                         "Anxiété 8–10", "Anxiété 1–7")) %>%
+  select(Groupe, Smoking, `Family History of Anxiety`,
+         Dizziness, Medication, `Recent Major Life Event`) %>%
+  pivot_longer(-Groupe, names_to = "Variable", values_to = "Reponse")
+
+# 2. Calculer les pourcentages de réponses Yes
+resume_cat <- data_cat %>%
+  group_by(Groupe, Variable) %>%
+  summarise(Pourcentage = mean(Reponse == "Yes", na.rm = TRUE) * 100,
+            .groups = "drop") %>%
+  mutate(Variable = recode(Variable,
+                           "Smoking" = "Tabagisme",
+                           "Family History of Anxiety" = "Antécédents familiaux",
+                           "Dizziness" = "Vertiges",
+                           "Medication" = "Médication",
+                           "Recent Major Life Event" = "Événement de vie récent"
+  ))
+
+# 3. Classer les variables selon l'écart entre les groupes
+ordre <- resume_cat %>%
+  pivot_wider(names_from = Groupe, values_from = Pourcentage) %>%
+  mutate(Ecart = abs(`Anxiété 8–10` - `Anxiété 1–7`)) %>%
+  arrange(Ecart) %>%
+  pull(Variable)
+
+resume_cat$Variable <- factor(resume_cat$Variable, levels = ordre)
+
+# 4. Graphique
+graph4 <- ggplot(resume_cat,
+                 aes(x = Pourcentage, y = Variable, color = Groupe)) +
+  geom_line(aes(group = Variable), color = "grey80", linewidth = 2) +
+  geom_point(size = 5) +
+  geom_text(aes(label = paste0(round(Pourcentage, 1), "%")),
+            hjust = -0.35, size = 3.5, show.legend = FALSE) +
+  scale_color_manual(values = c(
+    "Anxiété 1–7" = "#3B6FB6",
+    "Anxiété 8–10" = "#E45756"
+  )) +
+  scale_x_continuous(
+    labels = function(x) paste0(x, "%"),
+    expand = expansion(mult = c(0.02, 0.15))
   ) +
-  theme_classic(base_size = 13) +
   labs(
-    title = "Analyse factorielle discriminante",
-    subtitle = "Séparation des individus selon leur profession",
-    x = "Axe discriminant 1",
-    y = "Axe discriminant 2",
-    colour = "Profession"
+    title = "Les profils diffèrent-ils aussi sur les variables qualitatives ?",
+    subtitle = "Proportion d'individus répondant « Yes » dans chacun des deux groupes",
+    x = "Proportion d'individus",
+    y = NULL,
+    color = NULL
   ) +
+  theme_minimal(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold"),
-    legend.title = element_text(face = "bold")
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold", size = 18),
+    legend.position = "bottom"
   )
 
-modele_afd$scaling
-coef_afd <- as.data.frame(modele_afd$scaling)
-
-coef_afd$variable <- rownames(coef_afd)
-
-coef_afd
-library(tidyr)
-
-coef_long <- coef_afd |>
-  pivot_longer(
-    cols = starts_with("LD"),
-    names_to = "axe",
-    values_to = "coefficient"
-  )
-
-coef_long
+print(graph4)
