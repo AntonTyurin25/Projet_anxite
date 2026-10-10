@@ -8,7 +8,15 @@ library(dplyr)
 library(tidyr)
 library(skimr)
 library(DT)
-
+library(GGally)
+library(ggcorrplot)
+library(car)
+library(glmnet)
+library(randomForest)
+library(FactoMineR)
+library(factoextra)
+library(effectsize)
+library(scales)
 # un graphique fixe possible a mettre en pdf pour expliquer le choix et en quoi c'est interessant
 
 donnees <- read_csv(
@@ -46,7 +54,7 @@ names(donnees) <- c(
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
 source("R/page_donnees.R")
-source("R/page_analyse.R")
+source("R/page_structure.R")
 source("R/page_modele.R")
 
 ui <- dashboardPage(
@@ -126,8 +134,8 @@ ui <- dashboardPage(
       ),
       
       menuItem(
-        "Analyse",
-        tabName = "analyse",
+        "Structure",
+        tabName = "structure",
         icon = icon("chart-column")
       ),
       
@@ -168,8 +176,8 @@ ui <- dashboardPage(
       ),
       
       tabItem(
-        tabName = "analyse",
-        page_analyse_ui("analyse")
+        tabName = "structure",
+        page_structure_ui("structure")
       ),
       
       tabItem(
@@ -191,8 +199,8 @@ server <- function(input, output, session) {
     donnees = donnees
   )
   
-  page_analyse_server(
-    "analyse",
+  page_structure_server(
+    "structure",
     donnees = donnees
   )
   
