@@ -179,7 +179,7 @@ ui <- dashboardPage(
       
       tabItem(
         tabName = "structure",
-        page_analyse_ui("analyse")
+        page_structure_ui("structure")
       ),
       
       tabItem(
