@@ -56,7 +56,6 @@ source("R/page_accueil.R")
 source("R/page_donnees.R")
 source("R/page_structure.R")
 source("R/page_modele.R")
-modeles <- readRDS("models/modeles_anxiete.rds")
 ui <- dashboardPage(
   
   # --------------------------------------------------
@@ -201,7 +200,7 @@ server <- function(input, output, session) {
                       donnees = donnees)
   
   page_modele_server("modele",
-                      donnees = donnees, modeles)
+                      donnees = donnees)
 }
 
 shinyApp(ui, server)
