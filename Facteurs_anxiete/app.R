@@ -56,7 +56,7 @@ names(donnees) <- c(
 # Charger tous les fichiers R du dossier R/
 source("R/page_accueil.R")
 source("R/page_donnees.R")
-source("R/page_analyse.R")
+source("R/page_structure.R")
 source("R/page_modele.R")
 modeles <- readRDS("models/modeles_anxiete.rds")
 ui <- dashboardPage(
@@ -136,8 +136,8 @@ ui <- dashboardPage(
       ),
       
       menuItem(
-        "Analyse",
-        tabName = "analyse",
+        "Structure",
+        tabName = "structure",
         icon = icon("chart-column")
       ),
       
@@ -178,7 +178,7 @@ ui <- dashboardPage(
       ),
       
       tabItem(
-        tabName = "analyse",
+        tabName = "structure",
         page_analyse_ui("analyse")
       ),
       
@@ -199,7 +199,7 @@ server <- function(input, output, session) {
   page_donnees_server("donnees",
                       donnees = donnees)
   
-  page_analyse_server("analyse",
+  page_structure_server("structure",
                       donnees = donnees)
   
   page_modele_server("modele",
