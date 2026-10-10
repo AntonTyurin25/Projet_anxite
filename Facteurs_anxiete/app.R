@@ -89,15 +89,15 @@ ui <- dashboardPage(
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Anton Tyurin")
+          tags$a(icon("user"),"Anton Tyurin")
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Augustin Barnerias")
+          tags$a(icon("user"),"Augustin Barnerias")
         ),
         
         tags$li(
-          tags$a(icon("fa-solid fa-user"),"Ines Bouzida")
+          tags$a(icon("user"),"Ines Bouzida")
         )
       )
     )

@@ -60,7 +60,7 @@ page_modele_ui <- function(id) {
         sliderInput(
           ns("age"),
           "Âge",
-          min = 18,
+          min = 0,
           max = 100,
           value = 25,
           step = 1
@@ -283,34 +283,38 @@ page_modele_ui <- function(id) {
     # PERFORMANCE DU MODELE
     # ========================================================
     
+    # ========================================================
+    # PERFORMANCE DU MODELE
+    # ========================================================
+    
     fluidRow(
-      
-      valueBox(
-        value = "0,666",
-        subtitle = "R² sur les données test",
-        icon = icon("chart-line"),
-        color = "blue",
-        width = 4
-      ),
-      
-      valueBox(
-        value = "1,225",
-        subtitle = "RMSE",
-        icon = icon("bullseye"),
-        color = "green",
-        width = 4
-      ),
-      
-      valueBox(
-        value = "0,966",
-        subtitle = "MAE",
-        icon = icon("chart-bar"),
-        color = "yellow",
-        width = 4
+      column(
+        width = 6,
+        offset = 3,
+        
+        valueBox(
+          value = "0,666",
+          subtitle = "R² sur les données de test",
+          icon = icon("chart-line"),
+          color = "green",
+          width = 12
+        )
       )
     ),
     
-    
+    fluidRow(
+      column(
+        width = 10,
+        offset = 1,
+        
+        tags$p(
+          "Le R² mesure la capacité du modèle à expliquer les variations du niveau d'anxiété. ",
+          "Ici, le modèle explique environ 66,6 % de la variabilité du niveau d'anxiété ",
+          "sur les données de test.",
+          style = "text-align: center; color: #555; font-size: 15px; margin-top: 10px;"
+        )
+      )
+    ),
     # ========================================================
     # EXPLICATION DU MODELE
     # ========================================================
@@ -340,7 +344,7 @@ page_modele_ui <- function(id) {
         
         p(
           strong("Performance sur le jeu test : "),
-          "R² = 0,666 ; RMSE = 1,225 ; MAE = 0,966."
+          "R² = 0,666"
         ),
         
         p(
@@ -615,6 +619,33 @@ page_modele_server <- function(id, donnees) {
       })
       
       
+      output$jauge <- renderPlot({
+        
+        req(prediction())
+        
+        score <- prediction()
+        
+        plot(
+          1:10,
+          rep(1, 10),
+          type = "n",
+          xlim = c(1, 10),
+          ylim = c(0, 2),
+          xlab = "Niveau d'anxiété",
+          ylab = "",
+          yaxt = "n",
+          main = paste("Score estimé :", round(score, 1))
+        )
+        
+        points(
+          score,
+          1,
+          col = "red",
+          pch = 19,
+          cex = 3
+        )
+        
+      })
       # ======================================================
       # 7. JAUGE
       # ======================================================
@@ -623,53 +654,54 @@ page_modele_server <- function(id, donnees) {
         
         req(prediction())
         
-        score <- prediction()
+        score <- as.numeric(prediction())
         
+        # Données pour les 10 niveaux
+        jauge_data <- data.frame(
+          niveau = 1:10,
+          y = rep(1, 10)
+        )
         
-        ggplot(
-          
-          data.frame(
-            x = 1:10
-          ),
-          
-          aes(
-            x = x,
-            y = 1
-          )
-          
-        ) +
+        # Jauge colorée
+        ggplot(jauge_data, aes(x = niveau, y = y)) +
           
           geom_tile(
-            aes(fill = x),
-            height = 0.45,
-            width = 0.95
+            aes(fill = niveau),
+            width = 0.98,
+            height = 0.45
           ) +
           
-          scale_fill_gradient(
-            low = "#5CB85C",
-            high = "#D9534F"
+          scale_fill_gradientn(
+            colours = c("#5CB85C", "#F0AD4E", "#D9534F"),
+            limits = c(1, 10)
           ) +
           
+          # Trait noir indiquant le score
           geom_vline(
             xintercept = score,
-            linewidth = 2,
-            color = "#333333"
+            color = "#222222",
+            linewidth = 1.5
           ) +
           
+          # Point blanc indiquant le score
           geom_point(
-            aes(
-              x = score,
-              y = 1
-            ),
-            size = 6,
+            data = data.frame(score = score, y = 1),
+            mapping = aes(x = score, y = y),
+            inherit.aes = FALSE,
             shape = 21,
+            size = 5,
             fill = "white",
-            color = "#333333"
+            color = "#222222",
+            stroke = 1.5
           ) +
           
           scale_x_continuous(
             breaks = 1:10,
             limits = c(0.5, 10.5)
+          ) +
+          
+          coord_cartesian(
+            ylim = c(0.6, 1.4)
           ) +
           
           labs(
@@ -685,9 +717,8 @@ page_modele_server <- function(id, donnees) {
             axis.ticks.y = element_blank(),
             panel.grid = element_blank()
           )
+        
       })
-      
-      
       # ======================================================
       # 8. DETECTION D'UNE EXTRAPOLATION
       # ======================================================
