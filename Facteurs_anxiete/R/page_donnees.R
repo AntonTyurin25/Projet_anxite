@@ -41,7 +41,7 @@ description_variables <- data.frame(
   }),
   Description = c("Âge de l'individu (années)",
                   "Homme/Femme/Autre",
-                  "",
+                  "Artiste/Athlète/Avocat/Chef-cuisinier/Etudiant/Freelance/Infirmier/Ingénieur/Médecin/Musicien/Professeur/Scientifique/Autre",
                   "Heures de sommeil par nuit",
                   "Heures d'activité physique par semaine",
                   "Quantité de caféine ingérée (mg/jour)",
@@ -127,10 +127,10 @@ page_donnees_ui <- function(id) {
           width = 6,
           box(
             width = 12,
-            title = "Niveau d'anxiété",
+            title = "Répartition des professions",
             status = "primary",
             solidHeader = TRUE,
-            plotOutput(ns("resume_anxiete"), height = "300px")
+            plotOutput(ns("resume_professions"), height = "350px")
           )
         )
       )
@@ -310,39 +310,37 @@ page_donnees_server <- function(id, donnees) {
       )
     })
     
-    # Répartition du niveau d'anxiété
-    output$resume_anxiete <- renderPlot({
-      anxiete <- donnees[["Niveau d'anxiété"]]
-      
-      req(!is.null(anxiete))
-      
-      anxiete <- anxiete[!is.na(anxiete)]
-      req(length(anxiete) > 0)
-      
-      if (is.numeric(anxiete)) {
-        hist(
-          anxiete,
-          col = "steelblue",
-          border = "white",
-          main = "",
-          xlab = "Niveau d'anxiété",
-          ylab = "Nombre d'individus"
-        )
-      } else {
-        effectifs <- table(anxiete)
-        
-        barplot(
-          effectifs,
-          col = "steelblue",
-          border = "white",
-          main = "",
-          xlab = "Niveau d'anxiété",
-          ylab = "Nombre d'individus",
-          las = 1
-        )
-      }
-    })
+    # Répartition des professions
     
+    output$resume_professions <- renderPlot({
+      
+      profession <- donnees[["Profession"]]
+      
+      req(!is.null(profession))
+      
+      effectifs <- sort(
+        table(profession, useNA = "ifany"),
+        decreasing = TRUE
+      )
+      
+      req(length(effectifs) > 0)
+      
+      # Barres horizontales, triées par effectif décroissant
+      par(mar = c(5, 10, 2, 1))
+      
+      barplot(
+        effectifs,
+        horiz = TRUE,
+        col = "steelblue",
+        border = "white",
+        main = "",
+        xlab = "Nombre d'individus",
+        ylab = "",
+        las = 1,
+        cex.names = 0.8
+      )
+      
+    })
     
     # --------------------------------------------------
     # LISTE DES VARIABLES
@@ -354,7 +352,7 @@ page_donnees_server <- function(id, donnees) {
         session = session,
         inputId = "var",
         choices = names(donnees),
-        selected = names(donnees)[1]
+        selected = "Niveau d'anxiété"
       )
       
     })
