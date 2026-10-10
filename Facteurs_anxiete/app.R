@@ -17,8 +17,9 @@ library(FactoMineR)
 library(factoextra)
 library(effectsize)
 library(scales)
-
-
+#graph de differences de groupes 
+#graph effet pop out encadré rouge pour changement 7-8
+#basculer le graph de compar des lignes des var en interactif avec transparence
 # un graphique fixe possible a mettre en pdf pour expliquer le choix et en quoi c'est interessant
 # en vrai la ârtie acp peut etre fixe, en forme d'images d'on peut switch avec un bouton ,genre coloré selon la groupe d'anxieté, ou la profession, ou excetera.
 
