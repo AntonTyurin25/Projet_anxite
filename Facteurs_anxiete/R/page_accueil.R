@@ -1,5 +1,5 @@
 page_accueil_ui <- function(id) {
-  #
+  
   ns <- NS(id)
   
   tagList(
